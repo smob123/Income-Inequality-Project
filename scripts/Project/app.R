@@ -10,7 +10,6 @@
 library(shiny)
 library(dplyr)
 library(ggplot2)
-library(gridExtra)
 
 # read the translated data file
 incomes <-
@@ -52,11 +51,11 @@ incomes.by.age.df <-
 
 
 # calculate most common qualifications
-qualifications.counts <- table(over.40$qualification)
+qualifications.counts <- table(qualification = over.40$qualification)
 most.common.qualifications <- data.frame(qualifications.counts)
 
 # calculate most common occupations
-occupations.counts <- table(over.40$occupation)
+occupations.counts <- table(occupation = over.40$occupation)
 most.common.occupations <- data.frame(occupations.counts)
 
 # get the maximum total income, and the age group that is associated with it
@@ -100,7 +99,7 @@ ui <- fluidPage(
             tabsetPanel(
                 tabPanel(
                     "Younger and Older Than 40",
-                    plotOutput("younger.older.40", click = "younger.older.40.click"),
+                    plotOutput("younger.older.40"),
                     verbatimTextOutput("younger.older.40.info")
                 ),
                 tabPanel(
@@ -110,11 +109,13 @@ ui <- fluidPage(
                 ),
                 tabPanel(
                     "Common Qualifications",
-                    plotOutput("most.common.qualifications", click = "click3")
+                    plotOutput("most.common.qualifications"),
+                    verbatimTextOutput("most.common.qualifications.info")
                 ),
                 tabPanel(
                     "Common Occupations",
-                    plotOutput("most.common.occupations", click = "plot_click4")
+                    plotOutput("most.common.occupations"),
+                    verbatimTextOutput("most.common.occupations.info")
                 )
             )
         ))
@@ -131,17 +132,12 @@ server <- function(input, output) {
                    fill = age_group
                )) +
             geom_bar(stat = "identity") +
-            ylab("Sum of Incomes") +
+            ylab("Sum of Incomes for Each Age Group") +
             coord_polar("y", start = 0)
     })
     
     output$younger.older.40.info <- renderPrint({
-        nearPoints(
-            younger.older.40.df,
-            input$younger.older.40.click,
-            xvar = "age_group",
-            yvar = "income_totals"
-        )
+        print(younger.older.40.df)
     })
     
     # plot total incomes of all age groups
@@ -204,21 +200,31 @@ server <- function(input, output) {
     output$most.common.qualifications <- renderPlot({
         ggplot(most.common.qualifications) +
             geom_bar(aes(
-                x = Var1,
+                x = qualification,
                 y = Freq,
-                fill = Var1
+                fill = qualification
             ), stat = "identity")
+    })
+    
+    # print the information of the dataframe
+    output$most.common.qualifications.info <- renderPrint({
+        print(most.common.qualifications)
     })
     
     # plot most common occupations for people who are 40 and above
     output$most.common.occupations <- renderPlot({
         ggplot(most.common.occupations) +
             geom_bar(aes(
-                x = Var1,
+                x = occupation,
                 y = Freq,
-                fill = Var1
+                fill = occupation
             ), stat = "identity") +
             coord_flip()
+    })
+    
+    # print the information of the dataframe
+    output$most.common.occupations.info <- renderPrint({
+        print(most.common.occupations)
     })
 }
 
