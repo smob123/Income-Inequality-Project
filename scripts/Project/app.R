@@ -16,8 +16,8 @@ incomes <-
     read.csv("../../data/translated_data.csv", stringsAsFactors = FALSE)
 
 # calculate incomes based on whether an indivudual is over or under 40 years old
-over.40 <- incomes[incomes$agegrp >= 40,]
-under.40 <- incomes[incomes$agegrp < 40,]
+over.40 <- incomes[incomes$agegrp >= 40, ]
+under.40 <- incomes[incomes$agegrp < 40, ]
 
 over.40.total <- sum(over.40[, "income"])
 under.40.total <- sum(under.40[, "income"])
@@ -31,11 +31,11 @@ younger.older.40.df <-
 
 # calculate total incomes based on age groups
 get.income.by.age <- function() {
-    ages <- c(15, 20, 25, 30, 35, 40, 45, 60, 65)
+    ages <- c(15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65)
     a <- c()
     
     for (i in 1:length(ages)) {
-        x <- incomes[incomes$agegrp == ages[i],]
+        x <- incomes[incomes$agegrp == ages[i], ]
         a[i] <- sum(x$income)
     }
     
@@ -46,12 +46,13 @@ a <- get.income.by.age()
 
 # add the incomes by age into a dataframe to be plotted
 incomes.by.age.df <-
-    data.frame(agegrp = c(15, 20, 25, 30, 35, 40, 45, 60, 65),
+    data.frame(agegrp = c(15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65),
                income_totals = a)
 
 
 # calculate most common qualifications
-qualifications.counts <- table(qualification = over.40$qualification)
+qualifications.counts <-
+    table(qualification = over.40$qualification)
 most.common.qualifications <- data.frame(qualifications.counts)
 
 # calculate most common occupations
@@ -61,13 +62,13 @@ most.common.occupations <- data.frame(occupations.counts)
 # get the maximum total income, and the age group that is associated with it
 max.total.income <- max(incomes.by.age.df$income_totals)
 max.total.age <-
-    incomes.by.age.df[incomes.by.age.df$income_totals == max.total.income, ]
+    incomes.by.age.df[incomes.by.age.df$income_totals == max.total.income,]
 max.total.agegrp <- paste0(max.total.age, "-", max.total.age + 4)
 
 # get the minimum total income, and the age group that is associated with it
 min.total.income <- min(incomes.by.age.df$income_totals)
 min.total.age <-
-    incomes.by.age.df[incomes.by.age.df$income_totals == min.total.income, ]
+    incomes.by.age.df[incomes.by.age.df$income_totals == min.total.income,]
 min.total.agegrp <- paste0(min.total.age, "-", min.total.age + 4)
 
 # Define UI for application that draws a histogram
@@ -159,7 +160,7 @@ server <- function(input, output) {
             
             # get the data of the age group
             rowData <-
-                incomes.by.age.df[incomes.by.age.df$agegrp == rowNum, ]
+                incomes.by.age.df[incomes.by.age.df$agegrp == rowNum,]
             
             # check if there is a value in rowData
             if (length(rowData$agegrp) < 1) {
@@ -180,9 +181,13 @@ server <- function(input, output) {
                 total.incomes <-
                     paste0("Total incomes: ", rowData$income_totals)
                 
+                # get the list of incomes related to the
+                # selected age group from the original set
+                age.group <- incomes[incomes$agegrp == rowNum, ]
+                
                 # get the mean of incomes
                 mean.incomes <- paste0("Mean of Incomes: ",
-                                       mean(rowData$income_totals))
+                                       round(mean(age.group$income), digits = 2))
                 
                 # print all the previus variabkes in seperate lines
                 cat(paste0(
@@ -203,7 +208,8 @@ server <- function(input, output) {
                 x = qualification,
                 y = Freq,
                 fill = qualification
-            ), stat = "identity")
+            ),
+            stat = "identity")
     })
     
     # print the information of the dataframe
