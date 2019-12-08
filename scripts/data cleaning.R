@@ -25,52 +25,6 @@ translate.sex <- function() {
   return(incomes)
 }
 
-# translate the age group column's data
-translate.age.group <- function() {
-  # age group translations
-  g15_19 <- "15-19"
-  g20_24 <- "20-24"
-  g25_29 <- "25-29"
-  g30_34 <- "30-34"
-  g35_39 <- "35-39"
-  g40_44 <- "40-44"
-  g45_49 <- "45-49"
-  g50_54 <- "50-54"
-  g55_59 <- "55-59"
-  g60_64 <- "60-64"
-  g65 <- "65+"
-  
-  age.groups <-
-    c(g15_19,
-      g20_24,
-      g25_29,
-      g30_34,
-      g35_39,
-      g40_44,
-      g45_49,
-      g50_54,
-      g55_59,
-      g60_64,
-      g65)
-  
-  # unique ages stored in the set
-  ages <- c(15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65)
-  
-  len <- length(ages)
-  
-  for (i in 1:len) {
-    # get the age group's data at the current index
-    d <- incomes[incomes$agegrp == ages[i],]
-    # change the agegrp column to the currosponding translation
-    d$agegrp <- age.groups[i]
-    # update the original set
-    incomes[incomes$agegrp == ages[i],] <- d
-  }
-  
-  return(incomes)
-}
-
-
 # translates ethinicty data
 translate.ethnicity <- function() {
   # list of the available ethinicities
