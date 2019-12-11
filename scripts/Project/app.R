@@ -50,24 +50,25 @@ incomes.by.age.df <-
                income_totals = totals)
 
 
-# calculate qualification frequencies
-qualifications.counts <-
-    table(qualification = over.40$qualification)
-qualification.frequency <- data.frame(qualifications.counts)
+# calculates the frequencies of unique values in a dataframe's column
+calculate.frequencies <- function(dataset, var) {
+    # store the column's data in a time to calculate the frquencies of each value
+    counts <-
+        table(dataset[, var], dnn = c(var))
+    
+    # convert the table to a dataframe and return it
+    return(data.frame(counts))
+}
 
-
-# calculate the qualification frequencies for people who earn at least $1
+# get the list of people over 40 who earn at least $1 a week
 over.40.filter.one_dollar <-
     over.40[over.40$income >= 1,]
 
-qualifications.counts.one_dollar <-
-    table(qualification = over.40.filter.one_dollar$qualification)
+# get the list of people under 40 who earn at least $1 a week
+under.40.filter.one_dollar <-
+    under.40[under.40$income >= 1,]
 
-qualification.frequency.one_dollar <-
-    data.frame(qualifications.counts.one_dollar)
-
-
-# calculate the common qualifications for the top 1% of 40+ year olds
+# get the list of the top 1% of 40+ year olds
 over.40.ordered <- order(over.40)
 over.40.ordered <- over.40[over.40.ordered,]
 
@@ -75,35 +76,65 @@ one.percent <- ceiling(nrow(over.40.ordered) * 0.1)
 
 over.40.ordered <- over.40.ordered[1:one.percent,]
 
-qualification.frequency.top_one_percent <-
-    over.40[over.40.ordered$income >= 1, "qualification"]
+over.40.top_one_percent <-
+    over.40[over.40.ordered$income >= 1,]
 
-qualifications.counts.top_one_percent <-
-    table(qualification = qualification.frequency.top_one_percent)
+# get the list of the top 1% of people under 40 years old
+under.40.ordered <- order(under.40)
+under.40.ordered <- over.40[under.40.ordered,]
 
-qualification.frequency.top_one_percent <-
-    data.frame(qualifications.counts.top_one_percent)
+one.percent <- ceiling(nrow(under.40.ordered) * 0.1)
 
+under.40.ordered <- under.40.ordered[1:one.percent,]
+
+under.40.top_one_percent <-
+    under.40[under.40.ordered$income >= 1,]
+
+# calculate qualification frequencies for people who are 40+ years old
+over.40.qualification.frequency <-
+    calculate.frequencies(over.40, "qualification")
+
+# calculate qualification frequencies for people who are under 40 years old
+under.40.qualification.frequency <-
+    calculate.frequencies(under.40, "qualification")
+
+
+# calculate the qualification frequencies for people who earn at least $1
+over.40.qualification.frequency.one_dollar <-
+    calculate.frequencies(over.40.filter.one_dollar, "qualification")
+
+under.40.qualification.frequency.one_dollar <-
+    calculate.frequencies(under.40.filter.one_dollar, "qualification")
+
+
+# calculate the common qualifications for the top 1% of 40+ year olds
+over.40.qualification.frequency.top_one_percent <-
+    calculate.frequencies(over.40.top_one_percent, "qualification")
+
+under.40.qualification.frequency.top_one_percent <-
+    calculate.frequencies(under.40.top_one_percent, "qualification")
 
 # calculate occupation frequencies
-occupations.counts <- table(occupation = over.40$occupation)
-occupation.frequencies <- data.frame(occupations.counts)
+over.40.occupation.frequencies <-
+    calculate.frequencies(over.40, "occupation")
+
+under.40.occupation.frequencies <-
+    calculate.frequencies(under.40, "occupation")
 
 
 # calculate occupation frequency for everyone who earns at least $1
-occupation.counts.one_dollar <-
-    table(occupation = over.40.filter.one_dollar$occupation)
-occupation.frequency.one_dollar <-
-    data.frame(occupation.counts.one_dollar)
+over.40.occupation.frequency.one_dollar <-
+    calculate.frequencies(over.40.filter.one_dollar, "occupation")
 
-occupation.frequency.top_one_percent <-
-    over.40[over.40.ordered$income >= 1, "occupation"]
+under.40.occupation.frequency.one_dollar <-
+    calculate.frequencies(under.40.filter.one_dollar, "occupation")
 
-occupation.counts.top_one_percent <-
-    table(occupation = occupation.frequency.top_one_percent)
+# calculate occupation frequency for the top 1%
+over.40.occupation.frequency.top_one_percent <-
+    calculate.frequencies(over.40.top_one_percent, "occupation")
 
-occupation.frequency.top_one_percent <-
-    data.frame(occupation.counts.top_one_percent)
+under.40.occupation.frequency.top_one_percent <-
+    calculate.frequencies(under.40.top_one_percent, "occupation")
 
 
 # get the maximum total income, and the age group that is associated with it
@@ -152,45 +183,79 @@ ui <- fluidPage(
                     verbatimTextOutput("younger.older.40.info")
                 ),
                 tabPanel(
-                    "All Total Incomes",
-                    plotOutput("incomes.by.age", click = "incomes.by.age.click"),
-                    verbatimTextOutput("incomes.by.age.info")
-                ),
-                tabPanel(
                     "Qualification Frequencies",
-                    selectInput(
-                        "common.qualifications.filter",
-                        "Filter:",
-                        c(
-                            "none" = "all",
-                            "Earn at least $1" = "$1 or more",
-                            "Top 1%" = "top 1%"
-                        ),
-                        selected = "all"
+                    # display data filters in a row
+                    fluidRow(
+                        # the first column contains the age group filter
+                        column(
+                        5,
+                        radioButtons(
+                            "qualifications.age.groups.filter",
+                            label = "age.group",
+                            choices = c("40+", "under40"),
+                            selected = "40+"
+                        )
                     ),
+                    # the second column contains income filter
+                    column(
+                        5,
+                        selectInput(
+                            "common.qualifications.filter",
+                            "Filter:",
+                            c(
+                                "none" = "all",
+                                "Earn at least $1" = "$1 or more",
+                                "Top 1%" = "top 1%"
+                            ),
+                            selected = "all"
+                        )
+                    )),
+                    # print a summary of the data
                     plotOutput("qualification.frequency"),
                     verbatimTextOutput("qualification.frequency.info")
                 ),
                 tabPanel(
                     "Occupation Frequencies",
-                    selectInput(
-                        "common.occupations.filter",
-                        "Filter:",
-                        c(
-                            "none" = "all",
-                            "Earn at least $1" = "$1 or more",
-                            "Top 1%" = "top 1%"
-                        ),
-                        selected = "all"
+                    # display data filters in a row
+                    fluidRow(
+                        # the first column contains the age group filter
+                        column(
+                        5,
+                        radioButtons(
+                            "occupations.age.groups.filter",
+                            label = "age.group",
+                            choices = c("40+", "under40"),
+                            selected = "40+"
+                        )
                     ),
+                    # the second column contains income filter
+                    column(
+                        5,
+                        selectInput(
+                            "common.occupations.filter",
+                            "Filter:",
+                            c(
+                                "none" = "all",
+                                "Earn at least $1" = "$1 or more",
+                                "Top 1%" = "top 1%"
+                            ),
+                            selected = "all"
+                        )
+                    )),
+                    # print a summary of the data
                     plotOutput("occupation.frequencies"),
                     verbatimTextOutput("occupation.frequencies.info")
+                ),
+                tabPanel(
+                    "All Total Incomes",
+                    plotOutput("incomes.by.age", click = "incomes.by.age.click"),
+                    verbatimTextOutput("incomes.by.age.info")
                 )
             )
         ))
 )
 
-# Define server logic required to draw a histogram
+# Define server logic required draw the plots
 server <- function(input, output) {
     output$younger.older.40 <- renderPlot({
         # plot people who are older, or younger than 40 years old
@@ -209,6 +274,130 @@ server <- function(input, output) {
         print(younger.older.40.df)
     })
     
+    # plot qualification frequencies for people who are 40 and above
+    output$qualification.frequency <- renderPlot({
+        agegrp.filter <- input$qualifications.age.groups.filter
+        plot.filter <- input$common.qualifications.filter
+        
+        if (plot.filter == "all") {
+            if (agegrp.filter == "40+") {
+                mcqPlot <- over.40.qualification.frequency
+            } else if (agegrp.filter == "under40") {
+                mcqPlot <- under.40.qualification.frequency
+            }
+        } else if (plot.filter == "$1 or more") {
+            if (agegrp.filter == "40+") {
+                mcqPlot <- over.40.qualification.frequency.one_dollar
+            } else {
+                mcqPlot <- under.40.qualification.frequency.one_dollar
+            }
+        } else if (plot.filter == "top 1%") {
+            if (agegrp.filter == "40+") {
+                mcqPlot <- over.40.qualification.frequency.top_one_percent
+            } else {
+                mcqPlot <- under.40.qualification.frequency.top_one_percent
+            }
+        }
+        
+        ggplot(mcqPlot) +
+            geom_bar(aes(
+                x = qualification,
+                y = Freq,
+                fill = qualification
+            ),
+            stat = "identity")
+    })
+    
+    # print the information of the dataframe
+    output$qualification.frequency.info <- renderPrint({
+        agegrp.filter <- input$qualifications.age.groups.filter
+        plot.filter <- input$common.qualifications.filter
+        
+        if (plot.filter == "all") {
+            if (agegrp.filter == "40+") {
+                mcqPlot <- over.40.qualification.frequency
+            } else if (agegrp.filter == "under40") {
+                mcqPlot <- under.40.qualification.frequency
+            }
+        } else if (plot.filter == "$1 or more") {
+            if (agegrp.filter == "40+") {
+                mcqPlot <- over.40.qualification.frequency.one_dollar
+            } else {
+                mcqPlot <- under.40.qualification.frequency.one_dollar
+            }
+        } else if (plot.filter == "top 1%") {
+            if (agegrp.filter == "40+") {
+                mcqPlot <- over.40.qualification.frequency.top_one_percent
+            } else {
+                mcqPlot <- under.40.qualification.frequency.top_one_percent
+            }
+        }
+        
+        print(mcqPlot)
+    })
+    
+    # plot occupation frequencies for people who are 40 and above
+    output$occupation.frequencies <- renderPlot({
+        agegrp.filter <- input$occupations.age.groups.filter
+        plot.filter <- input$common.occupations.filter
+        
+        if (plot.filter == "all") {
+            if (agegrp.filter == "40+") {
+                mcoPlot <- over.40.occupation.frequencies
+            } else if (agegrp.filter == "under40") {
+                mcoPlot <- under.40.occupation.frequencies
+            }
+        } else if (plot.filter == "$1 or more") {
+            if (agegrp.filter == "40+") {
+                mcoPlot <- over.40.occupation.frequency.one_dollar
+            } else if (agegrp.filter == "under40") {
+                mcoPlot <- under.40.occupation.frequency.one_dollar
+            }
+        } else if (plot.filter == "top 1%") {
+            if (agegrp.filter == "40+") {
+                mcoPlot <- over.40.occupation.frequency.top_one_percent
+            } else if (agegrp.filter == "under40") {
+                mcoPlot <- under.40.occupation.frequency.top_one_percent
+            }
+        }
+        
+        ggplot(mcoPlot) +
+            geom_bar(aes(
+                x = occupation,
+                y = Freq,
+                fill = occupation
+            ), stat = "identity") +
+            coord_flip()
+    })
+    
+    # print the information of the dataframe
+    output$occupation.frequencies.info <- renderPrint({
+        agegrp.filter <- input$occupations.age.groups.filter
+        plot.filter <- input$common.occupations.filter
+        
+        if (plot.filter == "all") {
+            if (agegrp.filter == "40+") {
+                mcoPlot <- over.40.occupation.frequencies
+            } else if (agegrp.filter == "under40") {
+                mcoPlot <- under.40.occupation.frequencies
+            }
+        } else if (plot.filter == "$1 or more") {
+            if (agegrp.filter == "40+") {
+                mcoPlot <- over.40.occupation.frequency.one_dollar
+            } else if (agegrp.filter == "under40") {
+                mcoPlot <- under.40.occupation.frequency.one_dollar
+            }
+        } else if (plot.filter == "top 1%") {
+            if (agegrp.filter == "40+") {
+                mcoPlot <- over.40.occupation.frequency.top_one_percent
+            } else if (agegrp.filter == "under40") {
+                mcoPlot <- under.40.occupation.frequency.top_one_percent
+            }
+        }
+        
+        print(mcoPlot)
+    })
+    
     # plot total incomes of all age groups
     output$incomes.by.age <- renderPlot({
         ggplot(incomes.by.age.df) +
@@ -217,6 +406,7 @@ server <- function(input, output) {
             ylab("Sum of Incomes")
     })
     
+    # plot the income totals for all age groups
     output$incomes.by.age.info <- renderPrint({
         # get the x coordinate, which should represent an age group
         xPos <- input$incomes.by.age.click$x
@@ -267,78 +457,6 @@ server <- function(input, output) {
                 ))
             }
         }
-    })
-    
-    # plot qualification frequencies for people who are 40 and above
-    output$qualification.frequency <- renderPlot({
-        plot.filter <- input$common.qualifications.filter
-        
-        if (plot.filter == "all") {
-            mcqPlot <- qualification.frequency
-        } else if (plot.filter == "$1 or more") {
-            mcqPlot <- qualification.frequency.one_dollar
-        } else if (plot.filter == "top 1%") {
-            mcqPlot <- qualification.frequency.top_one_percent
-        }
-        
-        ggplot(mcqPlot) +
-            geom_bar(aes(
-                x = qualification,
-                y = Freq,
-                fill = qualification
-            ),
-            stat = "identity")
-    })
-    
-    # print the information of the dataframe
-    output$qualification.frequency.info <- renderPrint({
-        plot.filter <- input$common.qualifications.filter
-        
-        if (plot.filter == "all") {
-            mcqPlot <- qualification.frequency
-        } else if (plot.filter == "$1 or more") {
-            mcqPlot <- qualification.frequency.one_dollar
-        } else if (plot.filter == "top 1%") {
-            mcqPlot <- qualification.frequency.top_one_percent
-        }
-        
-        print(mcqPlot)
-    })
-    
-    # plot occupation frequencies for people who are 40 and above
-    output$occupation.frequencies <- renderPlot({
-        plot.filter <- input$common.occupations.filter
-        
-        if (plot.filter == "all") {
-            mcoPlot <- occupation.frequencies
-        } else if (plot.filter == "$1 or more") {
-            mcoPlot <- occupation.frequency.one_dollar
-        } else if (plot.filter == "top 1%") {
-            mcoPlot <- occupation.frequency.top_one_percent
-        }
-        
-        ggplot(mcoPlot) +
-            geom_bar(aes(
-                x = occupation,
-                y = Freq,
-                fill = occupation
-            ), stat = "identity") +
-            coord_flip()
-    })
-    
-    # print the information of the dataframe
-    output$occupation.frequencies.info <- renderPrint({
-        plot.filter <- input$common.occupations.filter
-        
-        if (plot.filter == "all") {
-            mcoPlot <- occupation.frequencies
-        } else if (plot.filter == "$1 or more") {
-            mcoPlot <- occupation.frequency.one_dollar
-        } else if (plot.filter == "top 1%") {
-            mcoPlot <- occupation.frequency.top_one_percent
-        }
-        
-        print(mcoPlot)
     })
 }
 
