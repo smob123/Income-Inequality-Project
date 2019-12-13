@@ -26,7 +26,8 @@ under.40.total <- sum(under.40[, "income"])
 younger.older.40.df <-
     data.frame(
         age_group = c("Over 40", "Under 40"),
-        income_totals = c(over.40.total, under.40.total)
+        income_totals = c(over.40.total, under.40.total),
+        mean_income = c(mean(over.40$income), mean(under.40$income))
     )
 
 # calculate total incomes based on age groups
