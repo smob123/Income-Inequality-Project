@@ -7,6 +7,10 @@
 #    http://shiny.rstudio.com/
 #
 
+# make sure to install the following packages before running the app:
+# install.packages("dplyr")
+# install.packages("ggplot2")
+
 library(shiny)
 library(dplyr)
 library(ggplot2)
@@ -27,7 +31,8 @@ younger.older.40.df <-
     data.frame(
         age_group = c("Over 40", "Under 40"),
         income_totals = c(over.40.total, under.40.total),
-        mean_income = c(mean(over.40$income), mean(under.40$income))
+        mean_income = c(round(mean(over.40$income), digits = 2),
+                        round(mean(under.40$income), digits =  2))
     )
 
 # calculate total incomes based on age groups
@@ -186,31 +191,30 @@ ui <- fluidPage(
                 tabPanel(
                     "Qualification Frequencies",
                     # display data filters in a row
-                    fluidRow(
-                        # the first column contains the age group filter
+                    fluidRow(# the first column contains the age group filter
                         column(
-                        5,
-                        radioButtons(
-                            "qualifications.age.groups.filter",
-                            label = "age.group",
-                            choices = c("40+", "under40"),
-                            selected = "40+"
-                        )
-                    ),
-                    # the second column contains income filter
-                    column(
-                        5,
-                        selectInput(
-                            "common.qualifications.filter",
-                            "Filter:",
-                            c(
-                                "none" = "all",
-                                "Earn at least $1" = "$1 or more",
-                                "Top 1%" = "top 1%"
-                            ),
-                            selected = "all"
-                        )
-                    )),
+                            5,
+                            radioButtons(
+                                "qualifications.age.groups.filter",
+                                label = "age.group",
+                                choices = c("40+", "under40"),
+                                selected = "40+"
+                            )
+                        ),
+                        # the second column contains income filter
+                        column(
+                            5,
+                            selectInput(
+                                "common.qualifications.filter",
+                                "Filter:",
+                                c(
+                                    "none" = "all",
+                                    "Earn at least $1" = "$1 or more",
+                                    "Top 1%" = "top 1%"
+                                ),
+                                selected = "all"
+                            )
+                        )),
                     # print a summary of the data
                     plotOutput("qualification.frequency"),
                     verbatimTextOutput("qualification.frequency.info")
@@ -218,31 +222,30 @@ ui <- fluidPage(
                 tabPanel(
                     "Occupation Frequencies",
                     # display data filters in a row
-                    fluidRow(
-                        # the first column contains the age group filter
+                    fluidRow(# the first column contains the age group filter
                         column(
-                        5,
-                        radioButtons(
-                            "occupations.age.groups.filter",
-                            label = "age.group",
-                            choices = c("40+", "under40"),
-                            selected = "40+"
-                        )
-                    ),
-                    # the second column contains income filter
-                    column(
-                        5,
-                        selectInput(
-                            "common.occupations.filter",
-                            "Filter:",
-                            c(
-                                "none" = "all",
-                                "Earn at least $1" = "$1 or more",
-                                "Top 1%" = "top 1%"
-                            ),
-                            selected = "all"
-                        )
-                    )),
+                            5,
+                            radioButtons(
+                                "occupations.age.groups.filter",
+                                label = "age.group",
+                                choices = c("40+", "under40"),
+                                selected = "40+"
+                            )
+                        ),
+                        # the second column contains income filter
+                        column(
+                            5,
+                            selectInput(
+                                "common.occupations.filter",
+                                "Filter:",
+                                c(
+                                    "none" = "all",
+                                    "Earn at least $1" = "$1 or more",
+                                    "Top 1%" = "top 1%"
+                                ),
+                                selected = "all"
+                            )
+                        )),
                     # print a summary of the data
                     plotOutput("occupation.frequencies"),
                     verbatimTextOutput("occupation.frequencies.info")
