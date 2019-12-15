@@ -1,5 +1,5 @@
 # Income-Inequality-Project
-This is a project for the course INFO 281, which aims to visualize income distribution inequality within New Zealand based on age groups, starting from ages between 15-19 up to 65+.
+This is a project for the course INFO 281, which aims to visualize income distribution inequality within New Zealand based on age groups, which are divided into people under 40 years old and ones who are over 40 years old.
 
 # Technologies Used
 - R
