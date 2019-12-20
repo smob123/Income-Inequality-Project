@@ -1,12 +1,12 @@
 # Income-Inequality-Project
-This is a project for the course INFO 281, which aims to visualize income distribution inequality within New Zealand based on age groups, starting from ages between 15-19 up to 65+.
+This is a project for the course INFO 281, which aims to visualize income distribution inequality within New Zealand based on age groups, which are divided into people under 40 years old and ones who are over 40 years old.
 
 # Technologies Used
 - R
 - Shiny
 
 # Screenshots
-<img src ="https://user-images.githubusercontent.com/26127333/70830320-d6ea8000-1e54-11ea-96e3-f46cacd5281c.PNG" />
-<img src ="https://user-images.githubusercontent.com/26127333/70665733-1341a300-1cd2-11ea-9bad-cb3914f8a719.PNG" />
-<img src ="https://user-images.githubusercontent.com/26127333/70665739-16d52a00-1cd2-11ea-8fa2-e16a50b19c80.PNG" />
-<img src ="https://user-images.githubusercontent.com/26127333/70665752-1f2d6500-1cd2-11ea-806e-ee10263476a2.PNG" />
+<img src ="https://user-images.githubusercontent.com/26127333/71240168-52749180-236d-11ea-932c-c7a0cb5b30a1.PNG" />
+<img src ="https://user-images.githubusercontent.com/26127333/71240170-530d2800-236d-11ea-9a99-6a38470b9c60.PNG" />
+<img src ="https://user-images.githubusercontent.com/26127333/71240171-530d2800-236d-11ea-8977-b3fe747a1f78.PNG" />
+<img src ="https://user-images.githubusercontent.com/26127333/71240172-530d2800-236d-11ea-9ea7-6154e4a6f787.PNG" />

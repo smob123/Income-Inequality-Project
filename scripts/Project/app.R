@@ -23,37 +23,35 @@ incomes <-
 over.40 <- incomes[incomes$agegrp >= 40, ]
 under.40 <- incomes[incomes$agegrp < 40, ]
 
-over.40.total <- sum(over.40[, "income"])
-under.40.total <- sum(under.40[, "income"])
+over.40.average <- round(mean(over.40[, "income"]), digits = 2)
+under.40.average <- round(mean(under.40[, "income"]), digits = 2)
 
 # add the result to a dataframe to plot it
 younger.older.40.df <-
     data.frame(
         age_group = c("Over 40", "Under 40"),
-        income_totals = c(over.40.total, under.40.total),
-        mean_income = c(round(mean(over.40$income), digits = 2),
-                        round(mean(under.40$income), digits =  2))
+        income_averages = c(over.40.average, under.40.average)
     )
 
-# calculate total incomes based on age groups
+# calculate average incomes based on age groups
 get.income.by.age <- function() {
     ages <- c(15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65)
-    totals <- c()
+    averages <- c()
     
     for (i in 1:length(ages)) {
         x <- incomes[incomes$agegrp == ages[i], ]
-        totals[i] <- sum(x$income)
+        averages[i] <- round(mean(x$income), digits = 2)
     }
     
-    return(totals)
+    return(averages)
 }
 
-totals <- get.income.by.age()
+averages <- get.income.by.age()
 
 # add the incomes by age into a dataframe to be plotted
 incomes.by.age.df <-
     data.frame(agegrp = c(15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65),
-               income_totals = totals)
+               income_averages = averages)
 
 
 # calculates the frequencies of unique values in a dataframe's column
@@ -143,130 +141,159 @@ under.40.occupation.frequency.top_one_percent <-
     calculate.frequencies(under.40.top_one_percent, "occupation")
 
 
-# get the maximum total income, and the age group that is associated with it
-max.total.income <- max(incomes.by.age.df$income_totals)
-max.total.age <-
-    incomes.by.age.df[incomes.by.age.df$income_totals == max.total.income,]
-max.total.agegrp <- paste0(max.total.age, "-", max.total.age + 4)
+# get the maximum average income, and the age group that is associated with it
+max.average.income <- max(incomes.by.age.df$income_averages)
+max.average.age <-
+    incomes.by.age.df[incomes.by.age.df$income_averages == max.average.income, "agegrp"]
+max.average.agegrp <-
+    paste0(max.average.age, "-", max.average.age + 4)
 
 
-# get the minimum total income, and the age group that is associated with it
-min.total.income <- min(incomes.by.age.df$income_totals)
-min.total.age <-
-    incomes.by.age.df[incomes.by.age.df$income_totals == min.total.income,]
-min.total.agegrp <- paste0(min.total.age, "-", min.total.age + 4)
+# get the minimum average income, and the age group that is associated with it
+min.average.income <- min(incomes.by.age.df$income_averages)
+min.average.age <-
+    incomes.by.age.df[incomes.by.age.df$income_averages == min.average.income, "agegrp"]
+min.average.agegrp <-
+    paste0(min.average.age, "-", min.average.age + 4)
+
+# get the number of people in each age group
+sample.sizes <- table(incomes$agegrp)
+
+# fix column names to display age ranges properly
+names(sample.sizes) <-
+    paste0(names(sample.sizes), "-", as.numeric(names(sample.sizes)) + 4)
+names(sample.sizes)[11] <- "65+"
+
+# store the result in a dataframe, and name the columns properly
+sample.sizes.df <- as.data.frame(sample.sizes)
+colnames(sample.sizes.df) <- c("Age Group", "Sample Size")
+
+# get the summary of the data to print it on the sidebar
+data.summary.df <-
+    data.frame(
+        "Averages" = c(max.average.income, min.average.income),
+        "Age Group" = c(max.average.agegrp, min.average.agegrp)
+    )
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
     # Application title
     titlePanel("Income Distribution in New Zealand"),
-    sidebarLayout(# side bar
-        sidebarPanel(# minimum income total, and the age group that is associated with it
+    sidebarLayout(
+        # side bar
+        sidebarPanel(
+            # summary of the dataset
+            div(tags$b("Number of the People in the Dataset:"),
+                p(nrow(incomes))),
+            div(tags$b("Sample Sizes")),
+            tableOutput("sample.sizes"),
+            div(tags$b("Mean of all Income Averages:"),
+                p(round(
+                    mean(incomes.by.age.df$income_averages), digits = 2
+                ))),
+            # minimum income average, and the age group that is associated with it
             div(
-                p("Min Income Total:"),
-                p(paste0(
-                    min.total.income, " (", min.total.agegrp, ")"
-                ))
-            ),
-            # maximum income total, and the age group that is associated with it
-            div(
-                p("Max Income Total:"),
-                p(paste0(
-                    max.total.income, " (", max.total.agegrp, ")"
-                ))
-            ),
-            # mean of all total incomes
-            div(
-                p("Mean of all Income Totals: "),
-                p(mean(incomes.by.age.df$income_totals))
-            )),
+                style = "margin-top:20px;",
+                tags$b("Maximum/Minimum Income Averages:"),
+                tableOutput("data.summary")
+            )
+        ),
         # Show a plots inside of a tabset in a tab panel
-        mainPanel(
-            tabsetPanel(
-                tabPanel(
-                    "Younger and Older Than 40",
-                    plotOutput("younger.older.40"),
-                    verbatimTextOutput("younger.older.40.info")
-                ),
-                tabPanel(
-                    "Qualification Frequencies",
-                    # display data filters in a row
-                    fluidRow(# the first column contains the age group filter
-                        column(
-                            5,
-                            radioButtons(
-                                "qualifications.age.groups.filter",
-                                label = "age.group",
-                                choices = c("40+", "under40"),
-                                selected = "40+"
-                            )
-                        ),
-                        # the second column contains income filter
-                        column(
-                            5,
-                            selectInput(
-                                "common.qualifications.filter",
-                                "Filter:",
-                                c(
-                                    "none" = "all",
-                                    "Earn at least $1" = "$1 or more",
-                                    "Top 1%" = "top 1%"
-                                ),
-                                selected = "all"
-                            )
-                        )),
-                    # print a summary of the data
-                    plotOutput("qualification.frequency"),
-                    verbatimTextOutput("qualification.frequency.info")
-                ),
-                tabPanel(
-                    "Occupation Frequencies",
-                    # display data filters in a row
-                    fluidRow(# the first column contains the age group filter
-                        column(
-                            5,
-                            radioButtons(
-                                "occupations.age.groups.filter",
-                                label = "age.group",
-                                choices = c("40+", "under40"),
-                                selected = "40+"
-                            )
-                        ),
-                        # the second column contains income filter
-                        column(
-                            5,
-                            selectInput(
-                                "common.occupations.filter",
-                                "Filter:",
-                                c(
-                                    "none" = "all",
-                                    "Earn at least $1" = "$1 or more",
-                                    "Top 1%" = "top 1%"
-                                ),
-                                selected = "all"
-                            )
-                        )),
-                    # print a summary of the data
-                    plotOutput("occupation.frequencies"),
-                    verbatimTextOutput("occupation.frequencies.info")
-                ),
-                tabPanel(
-                    "All Total Incomes",
-                    plotOutput("incomes.by.age", click = "incomes.by.age.click"),
-                    verbatimTextOutput("incomes.by.age.info")
-                )
+        mainPanel(tabsetPanel(
+            tabPanel(
+                "Younger and Older Than 40",
+                plotOutput("younger.older.40"),
+                verbatimTextOutput("younger.older.40.info")
+            ),
+            tabPanel(
+                "Qualification Frequencies",
+                # display data filters in a row
+                fluidRow(# the first column contains the age group filter
+                    column(
+                        5,
+                        radioButtons(
+                            "qualifications.age.groups.filter",
+                            label = "age.group",
+                            choices = c("40+", "under40"),
+                            selected = "40+"
+                        )
+                    ),
+                    # the second column contains income filter
+                    column(
+                        5,
+                        selectInput(
+                            "common.qualifications.filter",
+                            "Filter:",
+                            c(
+                                "none" = "all",
+                                "Earn at least $1" = "$1 or more",
+                                "Top 1%" = "top 1%"
+                            ),
+                            selected = "all"
+                        )
+                    )),
+                # print a summary of the data
+                plotOutput("qualification.frequency"),
+                verbatimTextOutput("qualification.frequency.info")
+            ),
+            tabPanel(
+                "Occupation Frequencies",
+                # display data filters in a row
+                fluidRow(# the first column contains the age group filter
+                    column(
+                        5,
+                        radioButtons(
+                            "occupations.age.groups.filter",
+                            label = "age.group",
+                            choices = c("40+", "under40"),
+                            selected = "40+"
+                        )
+                    ),
+                    # the second column contains income filter
+                    column(
+                        5,
+                        selectInput(
+                            "common.occupations.filter",
+                            "Filter:",
+                            c(
+                                "none" = "all",
+                                "Earn at least $1" = "$1 or more",
+                                "Top 1%" = "top 1%"
+                            ),
+                            selected = "all"
+                        )
+                    )),
+                # print a summary of the data
+                plotOutput("occupation.frequencies"),
+                verbatimTextOutput("occupation.frequencies.info")
+            ),
+            tabPanel(
+                "All Average Incomes",
+                plotOutput("incomes.by.age", click = "incomes.by.age.click"),
+                verbatimTextOutput("incomes.by.age.info")
             )
         ))
+    )
 )
 
 # Define server logic required draw the plots
 server <- function(input, output) {
+    # print the sample sizes' dataframe in the sidebar
+    output$sample.sizes <- renderTable({
+        return(sample.sizes.df)
+    })
+    
+    # print the summary of the max/min avergaes in the sidebar
+    output$data.summary <- renderTable({
+        return(data.summary.df)
+    })
+    
     output$younger.older.40 <- renderPlot({
         # plot people who are older, or younger than 40 years old
         ggplot(younger.older.40.df,
                aes(
                    x = "",
-                   y = income_totals,
+                   y = income_averages,
                    fill = age_group
                )) +
             geom_bar(stat = "identity") +
@@ -402,15 +429,15 @@ server <- function(input, output) {
         print(mcoPlot)
     })
     
-    # plot total incomes of all age groups
+    # plot average incomes of all age groups
     output$incomes.by.age <- renderPlot({
         ggplot(incomes.by.age.df) +
-            geom_point(aes(x = agegrp, y = income_totals), size = 3) +
+            geom_point(aes(x = agegrp, y = income_averages), size = 3) +
             xlab("Age groups") +
             ylab("Sum of Incomes")
     })
     
-    # plot the income totals for all age groups
+    # plot the income averages for all age groups
     output$incomes.by.age.info <- renderPrint({
         # get the x coordinate, which should represent an age group
         xPos <- input$incomes.by.age.click$x
@@ -439,26 +466,18 @@ server <- function(input, output) {
                     agegrp <- paste0("Age Group: ", "65+")
                 }
                 
-                # get the total of incomes of thatg age group
-                total.incomes <-
-                    paste0("Total incomes: ", rowData$income_totals)
+                # get the average of incomes of thatg age group
+                average.incomes <-
+                    paste0("Average income: ", rowData$income_averages)
                 
                 # get the list of incomes related to the
                 # selected age group from the original set
                 age.group <- incomes[incomes$agegrp == rowNum, ]
                 
-                # get the mean of incomes
-                mean.incomes <- paste0("Mean of Incomes: ",
-                                       round(mean(age.group$income), digits = 2))
-                
                 # print all the previus variabkes in seperate lines
-                cat(paste0(
-                    agegrp,
-                    "\n",
-                    total.incomes,
-                    "\n",
-                    mean.incomes
-                ))
+                cat(paste0(agegrp,
+                           "\n",
+                           average.incomes))
             }
         }
     })
